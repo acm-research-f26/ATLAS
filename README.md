@@ -21,4 +21,18 @@ lon - longitude of data point
 type - represented spatial information ex. point, building, campus
 ```
 
+### Aqueduct Dataset
+-Provide geospatial datasets for evalutating water-related risk by location. 
+
+-Relevant parameters/features
+```
+water stress - how much available water is already being used . (is there enough water relative to existing demand)
+baseline water depletion - how much available water is being consumed. (how much water is being used up)
+drought risk - measures when droughts are likely to occur. (Long drought periods could threaten water availability)
+groundwater table decline - how quickly groundwater levels are declining. (is groundwater disappearing over time)
+riverine flood risk - risk from rivers overflowing. (flooding can threaten nearby buildings, electrical systems, roads, and infrastructure)
+```
+
+
+
 
