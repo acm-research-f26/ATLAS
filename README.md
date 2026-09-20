@@ -18,7 +18,7 @@
 * 'type' : represented spatial information categorized as 'point', 'building', or 'campus'
 * 'sqft' : surface area of the facility polygon measured in square feet (available for building and campus types)
 * coordinates : latitude ('lat') and longitude ('lon') of the data point
-# Ecological features that would be important to consider:
+# Ecological features that would be important to consider/implement:
 * local resource burden : finding areas where many data centers are crowded together and putting stress on local power and water
     - cleaning script : a step to fix overlapping data so we dont count the same building twice
     - usage math : a way to turn square feet into a guess for how many megawatts and gallons are needed.
