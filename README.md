@@ -4,8 +4,7 @@
 
 ### Purpose
 IM3 provides the core facility and spatial information for known U.S.
-data centers. It can serve as the anchor dataset to which imagery and
-additional contextual/environmental datasets are joined.
+data centers. Facility locations can be used to retrieve corresponding satellite imagery and integrate additional environmental/contextual data.
 
 ### Relevant Parameters
 
@@ -43,9 +42,7 @@ Aqueduct provides water-related environmental context for the geographic
 areas surrounding data center facilities. These variables can be spatially
 joined to IM3 facility locations.
 
-Aqueduct 4.0 contains baseline water-risk indicators as well as future
-projections, allowing both current water conditions and possible future
-water-resource conditions to be considered.
+Aqueduct 4.0 provides water-related environmental indicators that can be associated with each data center location. In the initial classification phase, these indicators can be used as contextual features to evaluate whether water conditions contribute additional information when distinguishing between data center types.
 
 ### Relevant Parameter Groups
 
