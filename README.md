@@ -1,7 +1,7 @@
-ATLAS
+#ATLAS
 
 IM3 Open Source Data Center Atlas Dataset
-The IM3 Open Source Data Center Atlas provides spatial features/structural baselines for existing and projected data centers across the US. 
+The IM3 Open Source Data Center Atlas provides spatial features/structural baselines for existing and projected data centers in the US. 
 
 #Main Attributes/Features
 Spatial Identifiers and Metadata:
@@ -22,7 +22,7 @@ Physical/Structural Dimensions:
 
 #Extra Ecological and Environmental Features
 
-1. Water Risk & Hydrological Stress
+1. Water Risk
 Baseline Water Stress: This looks at how much water is actually being pulled from local supplies compared to what's available (from rivers and groundwater).
 
 Drought Severity Risk: We look at how often droughts happen and how long they last, which is super important for figuring out how cooling systems (like closed-loop vs. open-loop towers) will hold up.
@@ -36,5 +36,4 @@ Land-Use Conversion Metrics: This tracks what the land was used for before const
 3. Energy Demographics & Grid Carbon Intensity
 Substation Proximity & Capacity Constraints: This measures how far the facility is from the nearest electrical substation and checks whether the local power grid actually has enough room to handle the load.
 
-Marginal Grid Carbon Intensity: This gives us a clear picture of the carbon footprint by looking at the actual energy mix feeding power into the facility.
 
