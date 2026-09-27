@@ -1,6 +1,6 @@
 # ATLAS
 
-### IM3 Open Source Data Center Atlas
+### IM3 Open Source Data Center Atlas 
 -Contains locations of existing data centers in the US derived from OpenStreetMap.
 -Data center data is provided in 3 seperate layers. 
 ```
@@ -32,6 +32,89 @@ drought risk - measures when droughts are likely to occur. (Long drought periods
 groundwater table decline - how quickly groundwater levels are declining. (is groundwater disappearing over time)
 riverine flood risk - risk from rivers overflowing. (flooding can threaten nearby buildings, electrical systems, roads, and infrastructure)
 ```
+
+### Build Night 3 Notes
+- Code to display the images works fine but display won't work because it breaks at rgb thumbnail creation since I only have read access and not write access in google cloud
+
+## Tabular data -> Satellite Imagery Pipeline
+```
+IM3 GeoPackage
+      │
+      │ Select a row
+      ▼
+CoreSite DC1
+      │
+      │ geometry.x / geometry.y or lon/lat 
+      ▼
+ee.Geometry.Point([lon, lat])
+      │
+      │ buffer(1000)
+      ▼
+1 km area around data center
+      │
+      │
+      ▼
+Google Earth Engine
+      │
+      │ Search:
+      │ COPERNICUS/S2_SR_HARMONIZED
+      ▼
+Sentinel-2 ImageCollection
+      │
+      │ filterBounds(region)
+      │ filterDate(...)
+      │ cloud < 10%
+      ▼
+Possible satellite images
+      │
+      │ sort newest → oldest
+      ▼
+One Sentinel-2 image
+      │
+      ▼
+Spectral bands
+      │
+      ├──── B2 = Blue
+      ├──── B3 = Green
+      ├──── B4 = Red
+      ├──── B8 = NIR
+      └──── B11 = SWIR
+             │
+             │
+       For visual image:
+             │
+             ▼
+         B4 + B3 + B2
+        Red  Green Blue
+             │
+             ▼
+         RGB composite
+             │
+             │ visualization:
+             │ min = 0
+             │ max = 3000
+             ▼
+     Earth Engine renders
+        RGB thumbnail
+             │
+             │ getThumbURL()
+             ▼
+        Image URL
+             │
+             │ requests.get()
+             ▼
+        Image bytes
+             │
+             │ PIL.Image.open()
+             ▼
+       Python image object
+             │
+             │ plt.imshow()
+             ▼
+     Image of Data Center
+```
+
+
 
 
 
