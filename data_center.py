@@ -15,9 +15,12 @@ gdf = gpd.read_file('./Data/im3_dataset.gpkg',layer='point') #taking specific co
 #convert coordinates to lat/long
 gdf = gdf.to_crs(epsg=4326)
 
-data_center = gdf.iloc[0] #select first data center
+data_center = (gdf.dropna(subset=['geometry']).sample(n=1).iloc[0]) #select random data center
 lon = data_center.geometry.x
 lat = data_center.geometry.y
+print('Name: ', data_center['name'])
+print('State: ', data_center['state'])
+print('Coordinates: ', lon, lat)
 
 #google earth engine point since originally is [lon,lat] and it needs to be [lat,lon]
 center = ee.Geometry.Point([lon, lat])
