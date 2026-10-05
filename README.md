@@ -33,18 +33,15 @@ groundwater table decline - how quickly groundwater levels are declining. (is gr
 riverine flood risk - risk from rivers overflowing. (flooding can threaten nearby buildings, electrical systems, roads, and infrastructure)
 ```
 
-### Build Night 3 Notes
-- Code to display the images works fine but display won't work because it breaks at rgb thumbnail creation since I only have read access and not write access in google cloud
-
 ## Tabular data -> Satellite Imagery Pipeline
 ```
 IM3 GeoPackage
       │
       │ Select a row
       ▼
-CoreSite DC1
+Geopandas
       │
-      │ geometry.x / geometry.y or lon/lat 
+      │ 
       ▼
 ee.Geometry.Point([lon, lat])
       │
@@ -59,60 +56,27 @@ Google Earth Engine
       │ Search:
       │ COPERNICUS/S2_SR_HARMONIZED
       ▼
-Sentinel-2 ImageCollection
+NAIP image collection
       │
       │ filterBounds(region)
       │ filterDate(...)
-      │ cloud < 10%
       ▼
 Possible satellite images
       │
       │ sort newest → oldest
       ▼
-One Sentinel-2 image
+Recent image
       │
       ▼
-Spectral bands
-      │
-      ├──── B2 = Blue
-      ├──── B3 = Green
-      ├──── B4 = Red
-      ├──── B8 = NIR
-      └──── B11 = SWIR
-             │
-             │
-       For visual image:
-             │
-             ▼
-         B4 + B3 + B2
-        Red  Green Blue
-             │
-             ▼
-         RGB composite
-             │
-             │ visualization:
-             │ min = 0
-             │ max = 3000
-             ▼
-     Earth Engine renders
-        RGB thumbnail
-             │
-             │ getThumbURL()
-             ▼
-        Image URL
-             │
-             │ requests.get()
-             ▼
-        Image bytes
-             │
-             │ PIL.Image.open()
-             ▼
-       Python image object
-             │
-             │ plt.imshow()
-             ▼
-     Image of Data Center
-```
+VLM filter 
+      |
+      |
+      ▼
+Accept/Reject
+      |
+      |
+      ▼
+Import into Temp Folder
 
 
 
