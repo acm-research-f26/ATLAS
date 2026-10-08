@@ -2,4 +2,5 @@
 /Data
 .DS_Store
 
-
+Data/
+.env
