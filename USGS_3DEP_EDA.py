@@ -1,0 +1,380 @@
+#test call 
+
+import requests
+
+# Facility setup
+facility = {
+    "name": "TEST_LOCATION",
+    "lat": 35.015,
+    "lon": -90.015
+}
+
+lat = facility["lat"]
+lon = facility["lon"]
+
+facility_name = facility["name"].replace(" ", "_")
+
+# Determine local UTM CRS
+def get_utm_epsg(lat, lon):
+    """
+    Return the appropriate UTM EPSG code
+    for a latitude/longitude coordinate.
+    """
+
+    zone = int((lon + 180) / 6) + 1
+
+    if lat >= 0:
+        return 32600 + zone
+    else:
+        return 32700 + zone
+
+
+utm_epsg = get_utm_epsg(lat, lon)
+
+print("\nFACILITY")
+print("Name:", facility["name"])
+print("Latitude:", lat)
+print("Longitude:", lon)
+print("UTM CRS:", utm_epsg)
+
+# EPQS point query
+url = "https://epqs.nationalmap.gov/v1/json"
+
+point_params = {
+    "x": lon,
+    "y": lat,
+    "wkid": 4326,
+    "units": "Meters",
+    "includeDate": True
+}
+
+response = requests.get(url, params=point_params)
+response.raise_for_status()
+
+data = response.json()
+
+print("\nEPQS RESPONSE")
+print(data)
+
+#searches the national map for DEM products
+tnm_url = "https://tnmaccess.nationalmap.gov/api/v1/products"
+
+delta = 0.01
+
+bbox = [
+    lon - delta,
+    lat - delta,
+    lon + delta,
+    lat + delta
+]
+
+params = {
+    "bbox": ",".join(map(str, bbox)),
+    "datasets": "Digital Elevation Model (DEM) 1 meter",
+    "outputFormat": "JSON",
+    "max": 20
+}
+
+response = requests.get(tnm_url, params=params)
+response.raise_for_status()
+
+products = response.json()
+
+print("Bounding box:", bbox)
+print("Total products:", products.get("total"))
+
+#inspects finidning 
+items = products.get("items", [])
+
+print("Returned:", len(items))
+
+for item in items[:5]:
+    print("\n--- PRODUCT ---")
+    print("Title:", item.get("title"))
+    print("Date:", item.get("dateCreated"))
+    print("Format:", item.get("format"))
+    print("Size:", item.get("sizeInBytes"))
+    print("Download:", item.get("downloadURL"))
+
+#inspects the 7 files 
+for i, item in enumerate(items):
+    print(f"\n--- PRODUCT {i} ---")
+    print("Title:       ", item.get("title"))
+    print("Date created:", item.get("dateCreated"))
+    print("Format:      ", item.get("format"))
+    print("Size (MB):   ", round(item.get("sizeInBytes", 0) / 1e6, 2))
+    print("Bounding box:", item.get("boundingBox"))
+
+#keys for one result
+print("\nAvailable metadata fields:")
+print(items[0].keys())
+
+#inspects metadata for candidate product
+
+fields = [
+    "title",
+    "sourceName",
+    "sourceOriginName",
+    "publicationDate",
+    "lastUpdated",
+    "dateCreated",
+    "extent",
+    "datasets",
+    "bestFitIndex",
+    "metaUrl",
+    "vendorMetaUrl",
+]
+
+for field in fields:
+    print(f"\n{field}:")
+    print(candidate.get(field))
+
+#spatial check
+def contains_point(item, lon, lat):
+    bounds = item["boundingBox"]
+
+    return (
+        bounds["minX"] <= lon <= bounds["maxX"]
+        and bounds["minY"] <= lat <= bounds["maxY"]
+    )
+
+
+covering_products = [
+    item for item in items
+    if contains_point(item, lon, lat)
+]
+
+print("\nProducts containing facility point:", len(covering_products))
+
+for item in covering_products:
+    print(
+        item["title"],
+        "|",
+        round(item["sizeInBytes"] / 1e6, 2),
+        "MB"
+    )
+
+#records point level 3DEP metadata
+
+point_metadata = {
+    "longitude": lon,
+    "latitude": lat,
+    "elevation_m": float(data["value"]),
+    "resolution_m": data["resolution"],
+    "acquisition_date": data["attributes"].get("AcquisitionDate"),
+    "num_1m_products_found": products.get("total"),
+    "num_products_covering_point": len(covering_products),
+}
+
+print("\n3DEP POINT SUMMARY")
+for key, value in point_metadata.items():
+    print(f"{key}: {value}")
+
+#eequest + download 3DEP raster directly
+
+from pathlib import Path
+
+export_url = (
+    "https://elevation.nationalmap.gov/"
+    "arcgis/rest/services/3DEPElevation/ImageServer/exportImage"
+)
+
+raster_params = {
+    "bbox": ",".join(map(str, bbox)),
+    "bboxSR": 4326,
+    "imageSR": 4326,
+    "size": "1000,1000",
+    "format": "tiff",
+    "pixelType": "F32",
+    "interpolation": "RSP_BilinearInterpolation",
+    "f": "image"          # <-- important change
+}
+
+output_dir = Path("data/raw/usgs_3dep")
+output_dir.mkdir(parents=True, exist_ok=True)
+
+facility_name = facility["name"].replace(" ", "_")
+dem_path = output_dir / f"{facility_name}_dem.tif"
+response = requests.get(
+    export_url,
+    params=raster_params,
+    timeout=120
+)
+
+print("\nRASTER REQUEST")
+print("Status:", response.status_code)
+print("Content-Type:", response.headers.get("Content-Type"))
+print("Size (MB):", round(len(response.content) / 1e6, 2))
+
+response.raise_for_status()
+
+with open(dem_path, "wb") as f:
+    f.write(response.content)
+
+print("Saved:", dem_path)
+
+
+#Inspects GeoTIFF
+
+import rasterio
+
+with rasterio.open(dem_path) as src:
+    print("\nDEM METADATA")
+    print("CRS:", src.crs)
+    print("Width:", src.width)
+    print("Height:", src.height)
+    print("Bands:", src.count)
+    print("Dtype:", src.dtypes)
+    print("NoData:", src.nodata)
+    print("Bounds:", src.bounds)
+    print("Transform:", src.transform)
+    print("Resolution:", src.res)
+
+    elevation = src.read(1)
+
+#numerical sanity check
+import numpy as np
+
+valid = elevation[np.isfinite(elevation)]
+
+print("\nELEVATION SUMMARY")
+print("Valid pixels:", valid.size)
+print("Min:", valid.min())
+print("Max:", valid.max())
+print("Mean:", valid.mean())
+print("Std:", valid.std())
+
+print("\nPercentiles:")
+for p in [1, 5, 25, 50, 75, 95, 99]:
+    print(f"{p}%:", np.percentile(valid, p))
+
+
+#reproject DEM to meter based CRS
+
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+
+projected_path = output_dir / f"{facility_name}_dem_utm.tif"
+
+dst_crs = f"EPSG:{get_utm_epsg(lat, lon)}"
+nodata_value = -9999.0
+
+with rasterio.open(dem_path) as src:
+
+    transform, width, height = calculate_default_transform(
+        src.crs,
+        dst_crs,
+        src.width,
+        src.height,
+        *src.bounds
+    )
+
+    # Copy raster metadata
+    raster_profile = src.profile.copy()
+
+    raster_profile.update({
+        "crs": dst_crs,
+        "transform": transform,
+        "width": width,
+        "height": height,
+        "nodata": nodata_value
+    })
+
+    with rasterio.open(projected_path, "w", **raster_profile) as dst:
+
+        reproject(
+            source=rasterio.band(src, 1),
+            destination=rasterio.band(dst, 1),
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=transform,
+            dst_crs=dst_crs,
+            src_nodata=src.nodata,
+            dst_nodata=nodata_value,
+            resampling=Resampling.bilinear
+        )
+
+print("\nSaved projected DEM:")
+print(projected_path)
+
+#inspects the reproject
+with rasterio.open(projected_path) as src:
+    print("\nPROJECTED DEM METADATA")
+    print("CRS:", src.crs)
+    print("Width:", src.width)
+    print("Height:", src.height)
+    print("Bounds:", src.bounds)
+    print("Resolution:", src.res)
+    print("Transform:", src.transform)
+
+#Calculate slope
+
+with rasterio.open(projected_path) as src:
+    elevation_utm = src.read(1).astype("float32")
+    x_res, y_res = src.res
+
+    elevation_utm[elevation_utm == src.nodata] = np.nan
+
+valid_mask = np.isfinite(elevation_utm)
+
+filled = np.where(
+    valid_mask,
+    elevation_utm,
+    np.nanmedian(elevation_utm)
+)
+
+dz_dy, dz_dx = np.gradient(
+    filled,
+    y_res,
+    x_res
+)
+
+slope_rad = np.arctan(
+    np.sqrt(dz_dx**2 + dz_dy**2)
+)
+
+slope_deg = np.degrees(slope_rad)
+
+slope_deg[~valid_mask] = np.nan
+
+#stats from valid pixels 
+valid_slope = slope_deg[np.isfinite(slope_deg)]
+
+print("\nSLOPE SUMMARY")
+print("Min:", valid_slope.min())
+print("Max:", valid_slope.max())
+print("Mean:", valid_slope.mean())
+print("Std:", valid_slope.std())
+
+print("\nPercentiles:")
+for p in [1, 5, 25, 50, 75, 95, 99]:
+    print(f"{p}%:", np.percentile(valid_slope, p))
+
+#Visualize the slope
+import matplotlib.pyplot as plt
+
+# Elevation
+plt.figure(figsize=(8, 7))
+
+plt.imshow(elevation_utm)
+plt.colorbar(label="Elevation (m)")
+
+plt.title("USGS 3DEP Elevation")
+plt.xlabel("Pixel X")
+plt.ylabel("Pixel Y")
+
+plt.tight_layout()
+plt.show()
+
+
+# Slope
+plt.figure(figsize=(8, 7))
+
+plt.imshow(slope_deg)
+plt.colorbar(label="Slope (degrees)")
+
+plt.title("USGS 3DEP Slope")
+plt.xlabel("Pixel X")
+plt.ylabel("Pixel Y")
+
+plt.tight_layout()
+plt.show()
