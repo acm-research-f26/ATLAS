@@ -30,3 +30,9 @@ Thumbs.db
 # Local logs
 logs/
 *.log
+
+# Generated tabular and geospatial datasets
+*.csv
+*.parquet
+*.gpkg
+*.geojson
