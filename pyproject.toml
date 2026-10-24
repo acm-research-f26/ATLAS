@@ -15,8 +15,13 @@ dependencies = [
     "geopandas>=1.1.4",
     "huggingface-hub>=2.1.1",
     "jupyterlab>=4.6.4",
+    "matplotlib>=3.11.2",
     "pandas>=3.0.6",
+    "python-dotenv>=1.2.4",
     "rasterio>=1.5.1",
+    "scikit-learn>=1.9.1",
+    "torch==2.11.0",
+    "torchvision==0.26.0",
 ]
 
 [project.scripts]
@@ -25,3 +30,15 @@ atlas = "atlas:main"
 [build-system]
 requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32'" }]
+torchvision = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
