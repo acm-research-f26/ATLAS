@@ -1,7 +1,9 @@
 name: Assign PR reviewer
 
+# pull_request_target runs this file from main, so team branches
+# do not need a copy of the workflow. Do not check out PR code here.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, ready_for_review, reopened]
 
 permissions:

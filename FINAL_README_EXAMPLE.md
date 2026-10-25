@@ -1,12 +1,11 @@
 ![ACM Research Banner Light](https://github.com/ACM-Research/paperImplementations/assets/108421238/467a89e3-72db-41d7-9a25-51d2c589bfd9)
 
-# Fall 2026 Paper Implementations
+---
+# ATLAS - README/Docs example
 
-Hello leads! Find your branch and update it with all your files and README.md (template below). Let us know if run into any access issues.
+Here's an example formatted README.md file to use as reference for the final phase of our project.
 
-Use the below README template as you work through your implementations! 
-
-<!--Remove text above the '---' -->
+<!--Remove text between the 2 '---' -->
 ---
 
 # Headliner
