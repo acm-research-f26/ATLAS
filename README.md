@@ -70,6 +70,17 @@ drought risk - measures when droughts are likely to occur. (Long drought periods
 groundwater table decline - how quickly groundwater levels are declining. (is groundwater disappearing over time)
 riverine flood risk - risk from rivers overflowing. (flooding can threaten nearby buildings, electrical systems, roads, and infrastructure)
 ```
+## EIA Feature Pipeline
+
+`environmental-features/eia_feature_pipeline.ipynb` builds the combined IM3 + EIA dataset.
+
+**Requirements**
+- A `.env` file in the repo root containing `EIA_API_KEY=...`
+- The raw IM3 data CSV in `Data/`
+- The `ATLAS` AWS profile configured (for S3 uploads)
+
+**Run**
+Open the notebook and choose Restart → Run All. It can be run from the repo root or from inside `environmental-features/`; paths resolve either way. Outputs are saved to `Data/pipeline/`.
 
 ## Tabular data -> Satellite Imagery Pipeline
 ```
