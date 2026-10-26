@@ -5,9 +5,24 @@
 Data/
 .env
 .venv
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Secrets and local data
+.env
+Data/
 /Data
 checkpoints/
 /src/
+
+# Editor and OS
+.cursor
+.DS_Store
+
+# Local leftovers
 s3_test.txt
 AWSCLIV2.pkg
 .DS_Store
+.venv-local/
