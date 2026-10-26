@@ -33,51 +33,24 @@ groundwater table decline - how quickly groundwater levels are declining. (is gr
 riverine flood risk - risk from rivers overflowing. (flooding can threaten nearby buildings, electrical systems, roads, and infrastructure)
 ```
 
-## Tabular data -> Satellite Imagery Pipeline
-```
-IM3 GeoPackage
-      │
-      │ Select a row
-      ▼
-Geopandas
-      │
-      │ 
-      ▼
-ee.Geometry.Point([lon, lat])
-      │
-      │ buffer(1000)
-      ▼
-1 km area around data center
-      │
-      │
-      ▼
-Google Earth Engine
-      │
-      │ Search:
-      │ COPERNICUS/S2_SR_HARMONIZED
-      ▼
-NAIP image collection
-      │
-      │ filterBounds(region)
-      │ filterDate(...)
-      ▼
-Possible satellite images
-      │
-      │ sort newest → oldest
-      ▼
-Recent image
-      │
-      ▼
-VLM filter 
-      |
-      |
-      ▼
-Accept/Reject
-      |
-      |
-      ▼
-Import into Temp Folder
+## Training Notes (Hyperparameters are all measured independently)
+-Test run folder ending in 851343 testing resnet18
 
+-Test run folder ending in 671400 testing resnet34
 
+-Test run folder ending in 142875 had tensor filenames and metadata Ids had different leading-zero formatting, so
+when they were merged they were treated as different IDs and excluded most tensors which left only 68 samples. In result came out
+with very poor results in training
 
+-Test run folder ending in 023906 fixed the leading zero formatting issue which allowed 249 tensors across 245 facilities.
+the tensor count > facility count because multiple tensor files share the same facility.
+
+-Test run folder ending in 474337 used early stoppage with the patience of 10 where it monitored validation loss and stopped after 21 epoches
+because epoch 11 had the lowest validation loss of 1.0159 and an accuracy of roughly 46%.
+
+-Test run folder ending in 586537 used class weighted loss which improved small and large recall while medium recall declined but didn't improve overall accuracy
+with 51.4% accuracy.
+
+-Test run folder ending in 930916 runs with class weighted loss but main aspect is that Grad-Cam is implemented and shows a heatmap of why the 
+model chose the classification.
 
