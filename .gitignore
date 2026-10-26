@@ -36,3 +36,5 @@ logs/
 *.parquet
 *.gpkg
 *.geojson
+# Generated experiment artifacts (stored in S3)
+outputs/tabular_baselines/
