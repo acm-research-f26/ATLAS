@@ -4,3 +4,10 @@
 
 Data/
 .env
+.venv
+/Data
+checkpoints/
+/src/
+s3_test.txt
+AWSCLIV2.pkg
+.DS_Store

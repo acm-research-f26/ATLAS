@@ -12,6 +12,19 @@ dependencies = [
     "ipykernel>=7.3.0",
     "matplotlib>=3.11.2",
     "pandas>=3.0.6",
+    { name = "kevinlam404", email = "kevinklam223@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.43.114",
+    "botocore[crt]>=1.43.114",
+    "earthengine-api>=1.7.45",
+    "geemap>=0.38.8",
+    "geopandas>=1.1.4",
+    "huggingface-hub>=2.1.1",
+    "jupyterlab>=4.6.4",
+    "pandas>=3.0.6",
+    "rasterio>=1.5.1",
 ]
 
 [project.scripts]
@@ -19,4 +32,5 @@ atlas = "atlas:main"
 
 [build-system]
 requires = ["uv_build>=0.12.17,<0.13.0"]
+requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
