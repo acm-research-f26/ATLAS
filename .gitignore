@@ -1,13 +1,20 @@
-#put any data you use for the project
-/Data
-.DS_Store
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
 
-Data/
+# Secrets and local data
 .env
-.venv
+Data/
 /Data
 checkpoints/
 /src/
+
+# Editor and OS
+.cursor
+.DS_Store
+
+# Local leftovers
 s3_test.txt
 AWSCLIV2.pkg
-.DS_Store
+.venv-local/
