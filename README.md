@@ -159,9 +159,10 @@ These approaches are still under development and are not part of the completed v
 | Final v3 artifact publication to S3 | Complete |
 | NAIP imagery metadata and geospatial alignment validation | Outstanding |
 | USGS/NAIP multimodal input preparation | Outstanding |
-| CNN/image encoder training | Outstanding |
+| Preliminary CNN/image encoder experiments | Completed; further validation needed |
 | Multimodal training entrypoint and fusion experiments | Outstanding |
 | Edge/Colocation/Hyperscale label development | Outstanding |
+
 
 ## 6. Research Considerations
 
@@ -184,3 +185,72 @@ The following issues remain important as the project progresses:
 3. Implement and test the multimodal training pipeline.
 4. Compare imagery-only, tabular-only, and fused models using leakage-aware evaluation.
 5. Investigate operational data center classification labels beyond footprint-derived size classes.
+
+---
+
+## 8. Team Pipeline Implementation Notes
+
+### IM3 preprocessing and facility deduplication
+
+The team's `preprocessing.ipynb` is maintained at the repository root.
+
+Starting from `Data/im3_atlas.csv` (1,242 records), the documented workflow produces:
+
+| Output | Description |
+|---|---|
+| `Data/im3_atlas_cleaned.csv` | 1,147 facilities with six columns for visualization |
+| `Data/im3_baseline_5km.csv` | 317 spatially deduplicated records |
+| `Data/im3_baseline_10km.csv` | 251 records using an alternative deduplication configuration |
+| `Data/im3_baseline.csv` | Selected baseline, currently the 5 km version |
+
+The preprocessing workflow removes duplicate records, filters facilities without usable footprints, validates coordinates, and merges nearby facility records.
+
+For nearby records, campus representations are prioritized, followed by larger footprints. The retained record keeps its own identifier, location, and square footage.
+
+**Facility identifiers:** Read IDs as strings to preserve leading zeros:
+
+`pd.read_csv(file, dtype={"id": str, "state_id": str, "county_id": str})`
+
+IDs from removed or merged facilities may not match previously acquired imagery. Validate identifiers before joining datasets.
+
+The notebook also includes S3 upload steps for the cleaned IM3 datasets. Review the selected baseline configuration before rerunning it.
+
+The 5 km/10 km deduplication configurations are distinct from the 250-meter spatial grouping used for the ATLAS/WRI v3 evaluation.
+
+### EIA feature pipeline
+
+The team's EIA integration notebook is located at `environmental-features/eia_feature_pipeline.ipynb`.
+
+Requirements:
+- `EIA_API_KEY` in a repository-root `.env` file.
+- Raw IM3 data available under `Data/`.
+- Configured AWS `ATLAS` profile for S3 operations.
+
+The notebook generates IM3/EIA features under `Data/pipeline/`. According to the team's documentation, it supports execution from either the repository root or `environmental-features/`.
+
+Do not commit API keys or `.env` files.
+
+### Preliminary vision-model experiments
+
+The team has already conducted preliminary satellite-imagery classification experiments, including:
+
+- ResNet18 and ResNet34 training.
+- Correction of leading-zero mismatches between image tensors and facility metadata.
+- Early stopping based on validation loss.
+- Class-weighted loss experiments.
+- Grad-CAM visualization.
+
+The documented identifier correction increased usable imagery to 249 tensors across 245 facilities.
+
+One early-stopping experiment reported approximately 46% validation accuracy, while a separate class-weighted experiment reported 51.4% accuracy. These are historical experiments and are not directly comparable to the leakage-aware v3 tabular results.
+
+Relevant files include:
+
+- `models/train_vision_baseline.py`
+- `models/model_training_eval.ipynb`
+- `models/local_training_eval.ipynb`
+- `models/train_multimodal.ipynb`
+- `satellite-imagery/satellite_imagery.ipynb`
+- `satellite-imagery/image_to_tensor.ipynb`
+
+Preliminary vision training and Grad-CAM implementation have begun. The integrated multimodal model and its leakage-aware evaluation remain outstanding.
