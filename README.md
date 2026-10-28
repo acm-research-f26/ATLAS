@@ -1,166 +1,186 @@
-# Dataset Review & Additional Feature Ideas
+# ATLAS — Environmental Data Integration & Baseline Research
 
-## 1. IM3 Open Source Data Center Atlas
+ATLAS is an ACM Research project investigating multimodal approaches to data center classification using facility information, satellite imagery, terrain data, and environmental/infrastructure features.
 
-### Purpose
-IM3 provides the core facility and spatial information for known U.S.
-data centers. Facility locations can be used to retrieve corresponding satellite imagery and integrate additional environmental/contextual data.
+This repository contains research notebooks and supporting scripts for dataset exploration, preprocessing, feature integration, baseline modeling, and evaluation.
 
-### Relevant Parameters
+## 1. Repository Structure
 
-| Parameter | Meaning | Potential Use |
-|------|-----------------------------------|--------------------------------------------------------------------------------------------------|
-| `id` | Unique facility/record identifier | Primary key for linking datasets and imagery |
-| `name` | Facility name when available | Identification and validation |
-| `operator` | Organization associated with the facility | Identification/QC; potentially risky as a model input because of shortcut learning |
-| `ref` | Reference to source OSM information | Data provenance |
-| `sqft` | Estimated facility/building area | Potential measure of physical scale |
-| `lat` | Latitude | Imagery retrieval and spatial joins |
-| `lon` | Longitude | Imagery retrieval and spatial joins |
-| `state` | Facility state | Geographic analysis |
-| `state_abb` | State abbreviation | Standardized geographic identification |
-| `state_id` | State identifier | Geographic joins |
-| `county` | Facility county | County-level contextual joins |
-| `county_id` | County identifier | Standardized Census/FEMA/etc. joins |
-| `type` | Spatial representation (`point`, `building`, or `campus`) | Describes representation, NOT Edge/Colocation/Hyperscale class |
-| `geometry` | POINT or POLYGON spatial geometry | GIS operations, buffers, imagery extraction, spatial joins |
+| Directory | Contents |
+|---|---|
+| `usgs/` | USGS 3DEP acquisition, preprocessing, terrain analysis, and S3 publication |
+| `wri/` | WRI Aqueduct 4.0 EDA, facility-level feature extraction, dataset merging, validation, and publication |
+| `epoch/` | Preliminary Epoch AI dataset exploration |
+| `tabular_baseline/` | IM3/EIA baseline experiments, leakage-aware ATLAS/WRI modeling, evaluation, explainability, and publication utilities |
 
-### Important IM3 Considerations
+Shared preprocessing code and other team-owned components remain outside these research-specific directories.
 
-- `type` does not provide the intended Edge/Colocation/Hyperscale labels.
-- Latitude/longitude are necessary for spatial joins but may create geographic
-  shortcut learning if directly provided to the classifier.
-- `operator` may also create shortcut learning if particular operators are
-  strongly associated with one target class.
-- Missing/incomplete OSM-derived information should be checked during EDA.
+**Execution convention:** Run notebooks with the ATLAS repository root as the working directory. Several notebooks use relative paths such as `Data/processed/` and `outputs/`. Moving notebooks into subdirectories does not automatically update those paths.
 
+Data files, trained models, generated outputs, and large raster artifacts are stored locally or in AWS S3 rather than committed to GitHub.
 
-## 2. WRI Aqueduct 4.0
+## 2. Data Sources
 
-### Purpose
-Aqueduct provides water-related environmental context for the geographic
-areas surrounding data center facilities. These variables can be spatially
-joined to IM3 facility locations.
+### IM3 — Open Source Data Center Atlas
 
-Aqueduct 4.0 provides water-related environmental indicators that can be associated with each data center location. In the initial classification phase, these indicators can be used as contextual features to evaluate whether water conditions contribute additional information when distinguishing between data center types.
+IM3 provides the core facility registry, including facility identifiers, geographic locations, estimated building area, and spatial representations.
 
-### Relevant Parameter Groups
+Facility IDs and coordinates are used to align imagery, terrain, environmental indicators, and infrastructure data.
 
-#### Water Quantity / Availability
-Potentially relevant indicators include:
-- Baseline water stress
-- Water depletion
-- Interannual variability
-- Seasonal variability
-- Drought risk
+Important considerations:
+- `sqft` is used to derive the current experimental Small/Medium/Large target.
+- `type` describes spatial representation (point, building, or campus), not the intended operational data center category.
+- `type`, facility identity, coordinates, and other proxy variables require leakage and shortcut-learning checks.
+- The current size-classification experiment does not establish Edge/Colocation/Hyperscale classification.
 
-These characterize the availability, demand pressure, and variability of
-water resources surrounding a facility.
+### EIA — Energy and Infrastructure Features
 
-#### Water Quality
-Potential indicators describe water-quality-related risk in the surrounding
-area. These may provide environmental context that is distinct from simple
-water availability.
+EIA-derived variables provide energy and infrastructure context for the tabular modeling experiments.
 
-#### Flooding / Water-Related Hazards
-Aqueduct includes water-related risk information that can complement other
-hazard datasets considered later in the project.
+These features are evaluated alongside WRI indicators to determine their contribution to classification performance.
 
-#### Future Water Conditions
-Aqueduct 4.0 includes future projections centered around:
-- 2030
-- 2050
-- 2080
+### WRI Aqueduct 4.0
 
-Future indicators include projected changes in:
-- Water supply
-- Water demand
-- Water stress
-- Water depletion
-- Water variability
+WRI Aqueduct provides geographic water-risk indicators describing surrounding environmental conditions, not facility-specific water consumption.
 
-These could potentially be useful for evaluating how the environmental
-context of a facility or proposed location may change over time.
+The implemented workflow includes:
+- Extraction and integration of 13 facility-level water-risk indicators.
+- Validation of feature ranges, missingness, identifiers, and joins.
+- Integration with IM3/EIA tabular records.
+- Raw and normalized feature representations.
+- Validation and publication workflows for generated datasets.
 
-### Important Aqueduct Considerations
+WRI indicators are contextual features. They should not be interpreted as direct measurements of data center water usage or environmental impact.
 
-Aqueduct indicators describe the water-risk context surrounding a data center.
-They should NOT be interpreted as measurements of the data center's actual
-water consumption or environmental impact.
+### USGS 3DEP
 
-For example:
+USGS 3DEP provides elevation and terrain information through geospatial raster data.
 
-    High local water stress ≠ high data-center water consumption
+The implemented workflow includes:
+- Facility-location-based DEM acquisition and extraction.
+- GeoTIFF processing and exploratory analysis.
+- Facility-level raster organization and acquisition validation.
+- S3 publication of generated terrain artifacts.
 
-Aqueduct itself notes that composite measures such as overall water risk
-cannot be directly measured/validated and are primarily intended as
-prioritization tools. Individual indicators may therefore be preferable to
-blindly feeding an overall risk score into a model.
+USGS terrain data is intended for later integration into the multimodal model.
 
+### Epoch AI
 
-## 3. Additional Ecological / Contextual Data to Explore
+Preliminary dataset exploration is included in `epoch/`. This is exploratory work and is not part of the finalized tabular baseline.
 
-### Thermal / Climate
-Potential features:
-- Mean annual temperature
-- Seasonal temperature
-- Extreme heat frequency
-- Land-surface temperature
-- Precipitation
-- Temperature trends over time
+## 3. Tabular Baseline Experiments
 
-Potential sources:
-- NOAA
-- USGS Landsat Surface Temperature
+### Original IM3/EIA Baseline — v1
 
-### Population / Urbanization
-Potential features:
-- Population density
-- Population within facility buffers
-- 5-year / 10-year population growth
-- Urban/rural classification
-- Developed land percentage
-- Impervious surface percentage
-- Change in developed land over time
+Initial experiments evaluated the predictive signal available from IM3 and EIA-derived tabular features.
 
-Potential sources:
-- U.S. Census Bureau
-- NLCD
+The selected tuned Random Forest achieved the following results under the original held-out evaluation:
 
-### Energy / Infrastructure
-Potential features:
-- Regional generation capacity
-- Generation mix
-- Renewable share
-- Grid region
-- Proximity to relevant energy infrastructure
+| Metric | Result |
+|---|---:|
+| Macro-F1 | 0.5676 |
+| Balanced accuracy | 0.5622 |
+| Accuracy | 68.79% |
 
-Potential source:
-- U.S. EIA
+These experiments established an initial tabular reference point, but subsequent analysis identified limitations involving geographic generalization and potential leakage.
 
-### Natural Hazards
-Potential features:
-- Wildfire
-- Flooding
-- Extreme heat
-- Severe storms
-- Other location-relevant hazards
+The v1 artifacts are stored under:
 
-Potential source:
-- FEMA
+`artifacts/baseline/im3_eia_tabular_v1/`
 
+### Leakage-Aware ATLAS/WRI Baseline — v3
 
-## 4. Potential Feature Organization
+The revised experiment incorporates EIA and WRI features and uses a spatially separated evaluation protocol.
 
-Rather than treating all contextual variables as one group, they could be
-organized into interpretable feature families:
+Key design decisions:
+- Three-class footprint-derived Small/Medium/Large classification.
+- 43 raw tabular inputs: 32 EIA and 11 WRI.
+- Exclusion of IM3 `type` as a potentially target-related proxy.
+- Spatial group-disjoint development/test split using a 250-meter grouping threshold.
+- Spatial and state-grouped cross-validation.
+- Random Forest, XGBoost, and CatBoost model comparisons.
+- Final class-weighted XGBoost selection and held-out evaluation.
 
-1. Water
-2. Climate / Thermal
-3. Population / Urbanization
-4. Energy / Infrastructure
-5. Natural Hazards
+**Final held-out evaluation (161 facilities):**
 
-This organization could support later feature-family ablation experiments and
-XAI analysis to investigate which contextual information contributes to
-classification beyond satellite imagery.
+| Metric | Result |
+|---|---:|
+| Macro-F1 | 0.4298 |
+| Balanced accuracy | 0.5137 |
+| Accuracy | 50.93% |
+
+The development set contains 986 facilities.
+
+The lower v3 score should not be interpreted as a direct model regression against v1: the experiments use different evaluation protocols, and the v3 approach is designed to reduce spatial leakage.
+
+**Explainability and feature-family analysis**
+
+SHAP attribution was approximately 76.3% EIA and 23.7% WRI by absolute attribution magnitude. This describes model reliance, not causal influence.
+
+WRI ablation produced mixed results, with no consistent improvement across spatial and state-grouped validation.
+
+**Limitations**
+
+- Geographic transferability remains challenging.
+- Minority-class performance is limited.
+- The classification labels are derived from facility footprint, not verified operational categories.
+- Additional external validation and multimodal experiments are required.
+
+Published artifacts:
+
+`artifacts/baseline/atlas_wri_v3/`
+
+The S3 publication contains 13 artifacts covering the selected model, held-out evaluation, spatial split protocol, cross-validation, SHAP analysis, and WRI ablation.
+
+## 4. Multimodal Integration — Planned Work
+
+The intended multimodal architecture will combine visual and tabular information.
+
+Proposed components:
+- NAIP satellite imagery for visual features.
+- USGS 3DEP terrain rasters for topographic context.
+- EIA and WRI tabular features for infrastructure and environmental context.
+- Feature fusion and a classification head for the final prediction.
+
+Potential experiments include a shared image encoder with terrain channels, separate terrain and imagery encoders, and late fusion with tabular features.
+
+These approaches are still under development and are not part of the completed v3 tabular baseline.
+
+## 5. Current Status
+
+| Workstream | Status |
+|---|---|
+| WRI facility-level feature extraction and validation | Complete |
+| WRI integration and publication workflows | Implemented; verify final downstream dataset version |
+| USGS 3DEP acquisition and S3 publication | Complete |
+| Original IM3/EIA tabular baseline | Complete |
+| Leakage-aware ATLAS/WRI v3 baseline | Complete |
+| SHAP analysis and WRI ablation | Complete |
+| Final v3 artifact publication to S3 | Complete |
+| NAIP imagery metadata and geospatial alignment validation | Outstanding |
+| USGS/NAIP multimodal input preparation | Outstanding |
+| CNN/image encoder training | Outstanding |
+| Multimodal training entrypoint and fusion experiments | Outstanding |
+| Edge/Colocation/Hyperscale label development | Outstanding |
+
+## 6. Research Considerations
+
+The following issues remain important as the project progresses:
+
+**Target leakage and shortcut learning:** Facility footprint, geographic context, spatial representation, and infrastructure proxies may provide predictive shortcuts. Model evaluation should distinguish meaningful generalization from these effects.
+
+**Geographic generalization:** Random splitting may overestimate performance when nearby facilities share environmental and infrastructure characteristics. Spatial and state-grouped evaluation should remain part of future experiments.
+
+**Geospatial alignment:** Satellite imagery and USGS elevation data must be aligned using consistent facility locations, geographic footprints, coordinate reference systems, and raster bounds.
+
+**Temporal alignment:** Imagery, terrain, and tabular datasets may describe different collection periods. Their temporal compatibility should be documented.
+
+**Feature contribution:** Environmental and infrastructure feature families should be assessed using ablation and explainability methods rather than assuming additional inputs always improve performance.
+
+## 7. Next Steps
+
+1. Validate the final facility-aligned multimodal dataset and NAIP metadata.
+2. Complete image and terrain preprocessing for model inputs.
+3. Implement and test the multimodal training pipeline.
+4. Compare imagery-only, tabular-only, and fused models using leakage-aware evaluation.
+5. Investigate operational data center classification labels beyond footprint-derived size classes.
