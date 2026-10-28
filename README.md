@@ -54,3 +54,4 @@ with 51.4% accuracy.
 -Test run folder ending in 930916 runs with class weighted loss but main aspect is that Grad-Cam is implemented and shows a heatmap of why the 
 model chose the classification.
 
+-Test run folder ending in 949124 has grad-cam classifications of small, medium, and large when correct and incorrect
