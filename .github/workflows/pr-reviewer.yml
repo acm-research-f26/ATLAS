@@ -1,0 +1,32 @@
+name: Assign PR reviewer
+
+# pull_request_target runs this file from main, so team branches
+# do not need a copy of the workflow. Do not check out PR code here.
+on:
+  pull_request_target:
+    types: [opened, ready_for_review, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Request reviewer
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reviewer = 'AdvayChandramouli';
+            const author = context.payload.pull_request.user.login;
+            if (author.toLowerCase() === reviewer.toLowerCase()) {
+              core.info(`Skipping review request: ${author} is the PR author.`);
+              return;
+            }
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              reviewers: [reviewer],
+            });
