@@ -8,7 +8,7 @@ This repository contains research notebooks and supporting scripts for dataset e
 
 | Directory | Contents |
 |---|---|
-| `environmental-features/usgs/` | USGS 3DEP acquisition, terrain analysis, and S3 publication |
+| `environmental-features/usgs/` | USGS 3DEP acquisition, preprocessing, terrain-feature extraction, and S3 publication |
 | `environmental-features/wri/` | WRI Aqueduct 4.0 facility-level 13-score extraction, dataset merging, validation, and publication |
 | `environmental-features/epoch/` | Preliminary Epoch AI dataset exploration |
 | `models/tabular_baseline/` | IM3/EIA baseline experiments, leakage-aware ATLAS/WRI modeling, evaluation, explainability, and publication utilities |
