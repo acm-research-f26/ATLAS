@@ -8,10 +8,10 @@ This repository contains research notebooks and supporting scripts for dataset e
 
 | Directory | Contents |
 |---|---|
-| `usgs/` | USGS 3DEP acquisition, preprocessing, terrain analysis, and S3 publication |
-| `wri/` | WRI Aqueduct 4.0 EDA, facility-level feature extraction, dataset merging, validation, and publication |
-| `epoch/` | Preliminary Epoch AI dataset exploration |
-| `tabular_baseline/` | IM3/EIA baseline experiments, leakage-aware ATLAS/WRI modeling, evaluation, explainability, and publication utilities |
+| `environmental-features/usgs/` | USGS 3DEP acquisition, terrain analysis, and S3 publication |
+| `environmental-features/wri/` | WRI Aqueduct 4.0 facility-level 13-score extraction, dataset merging, validation, and publication |
+| `environmental-features/epoch/` | Preliminary Epoch AI dataset exploration |
+| `models/tabular_baseline/` | IM3/EIA baseline experiments, leakage-aware ATLAS/WRI modeling, evaluation, explainability, and publication utilities |
 
 Shared preprocessing code and other team-owned components remain outside these research-specific directories.
 
@@ -66,7 +66,7 @@ USGS terrain data is intended for later integration into the multimodal model.
 
 ### Epoch AI
 
-Preliminary dataset exploration is included in `epoch/`. This is exploratory work and is not part of the finalized tabular baseline.
+Preliminary dataset exploration is included in `environmental-features/epoch/`. This is exploratory work and is not part of the finalized tabular baseline.
 
 ## 3. Tabular Baseline Experiments
 
