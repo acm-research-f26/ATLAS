@@ -56,13 +56,31 @@ WRI indicators are contextual features. They should not be interpreted as direct
 
 USGS 3DEP provides elevation and terrain information through geospatial raster data.
 
-The implemented workflow includes:
-- Facility-location-based DEM acquisition and extraction.
-- GeoTIFF processing and exploratory analysis.
-- Facility-level raster organization and acquisition validation.
-- S3 publication of generated terrain artifacts.
+**Completed acquisition and alignment workflows:**
+- Historical facility-location-based DEM acquisition, GeoTIFF processing, and S3 publication.
+- A unified USGS–NAIP alignment v2 pipeline covering 180 facilities with available NAIP imagery and reconstructed footprint metadata.
+- Standardized single-band, float32 DEMs in EPSG:4326 at 1/3 arc-second resolution (1/10800 degree), using a globally anchored target grid.
+- Facility-level provenance JSON files recording source selection, USGS source URLs, processing configuration, raster geometry, and NAIP metadata references.
+- Completed local validation of 180 DEMs and 180 provenance files, including raster-grid consistency, source lineage, and facility identifier checks.
+- S3 publication and remote verification of all 360 DEM/provenance objects and the associated manifest.
 
-USGS terrain data is intended for later integration into the multimodal model.
+**Final v2 S3 locations:**
+
+| Artifact | S3 prefix or key |
+|---|---|
+| Aligned DEMs (180) | `usgs/naip_aligned_v2/dem/` |
+| Provenance JSONs (180) | `usgs/naip_aligned_v2/provenance/` |
+| Alignment manifest | `usgs/processed/usgs_naip_alignment_manifest_v2.parquet` |
+
+All paths above are relative to `s3://atlas-acm-research-f26/`.
+
+**Reproducible notebook:** `environmental-features/usgs/usgs_naip_alignment.ipynb`
+
+The superseded v1 aligned S3 collection was backed up locally and removed from S3. The historical `usgs/raw/` collection and its provenance remain preserved.
+
+**Geospatial limitation:** The NAIP footprints used for alignment were reconstructed from available metadata rather than independently verified against the original historical Google Earth Engine exports. The v2 DEMs follow a consistent geographic grid, but pixel-perfect alignment with the original NAIP PNGs is not established. Historical footprint verification and image-to-DEM registration remain outstanding.
+
+The aligned terrain dataset is ready for downstream preprocessing and multimodal experimentation; integration into a trained multimodal model is not yet complete.
 
 ### Epoch AI
 
@@ -152,13 +170,14 @@ These approaches are still under development and are not part of the completed v
 |---|---|
 | WRI facility-level feature extraction and validation | Complete |
 | WRI integration and publication workflows | Implemented; verify final downstream dataset version |
-| USGS 3DEP acquisition and S3 publication | Complete |
 | Original IM3/EIA tabular baseline | Complete |
 | Leakage-aware ATLAS/WRI v3 baseline | Complete |
 | SHAP analysis and WRI ablation | Complete |
+| USGS 3DEP acquisition and historical S3 publication | Complete |
+| USGS–NAIP v2 alignment (180 DEMs + 180 provenance files) | Complete; QA passed and S3 verified |
+| Historical NAIP export footprint verification | Outstanding; reconstructed metadata used |
+| USGS/NAIP model input preparation and registration | Outstanding |
 | Final v3 artifact publication to S3 | Complete |
-| NAIP imagery metadata and geospatial alignment validation | Outstanding |
-| USGS/NAIP multimodal input preparation | Outstanding |
 | Preliminary CNN/image encoder experiments | Completed; further validation needed |
 | Multimodal training entrypoint and fusion experiments | Outstanding |
 | Edge/Colocation/Hyperscale label development | Outstanding |
@@ -180,11 +199,11 @@ The following issues remain important as the project progresses:
 
 ## 7. Next Steps
 
-1. Validate the final facility-aligned multimodal dataset and NAIP metadata.
-2. Complete image and terrain preprocessing for model inputs.
-3. Implement and test the multimodal training pipeline.
-4. Compare imagery-only, tabular-only, and fused models using leakage-aware evaluation.
-5. Investigate operational data center classification labels beyond footprint-derived size classes.
+1. Verify historical NAIP export footprints where possible and validate image-to-DEM registration.
+2. Prepare aligned NAIP imagery and USGS terrain tensors for CNN training, including consistent facility IDs and spatial coverage.
+3. Implement and test the multimodal training pipeline using imagery, terrain, and EIA/WRI tabular features.
+4. Compare imagery-only, terrain-only, tabular-only, and fused models using spatially separated evaluation and feature-family ablation.
+5. Investigate operational data center classification labels (Edge, Colocation, Hyperscale) beyond footprint-derived size classes.
 
 ---
 
