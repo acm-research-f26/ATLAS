@@ -1,20 +1,47 @@
-# Python
+# Local datasets and generated data
+Data/
+data/
+atlas-data/
+*.csv
+*.parquet
+*.gpkg
+*.geojson
+
+# Satellite imagery and geospatial files
+*.tif
+*.tiff
+*.jp2
+
+# Generated model artifacts
+checkpoints/
+outputs/tabular_baselines/
+
+# Python environments and caches
 .venv/
+.venv-local/
+venv/
+env/
 __pycache__/
+*.pyc
+
+# Jupyter temporary files
 .ipynb_checkpoints/
 
-# Secrets and local data
+# Environment variables and credentials
 .env
-Data/
-/Data
-checkpoints/
-/src/
+.env.*
 
-# Editor and OS
-.cursor
+# Editor and OS files
 .DS_Store
+Thumbs.db
+.vscode/
+.cursor
 
-# Local leftovers
+# Local logs
+logs/
+*.log
+
+# Team-specific local exclusions
+/src/
 s3_test.txt
 AWSCLIV2.pkg
-.venv-local/
