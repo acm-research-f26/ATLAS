@@ -56,13 +56,31 @@ WRI indicators are contextual features. They should not be interpreted as direct
 
 USGS 3DEP provides elevation and terrain information through geospatial raster data.
 
-The implemented workflow includes:
-- Facility-location-based DEM acquisition and extraction.
-- GeoTIFF processing and exploratory analysis.
-- Facility-level raster organization and acquisition validation.
-- S3 publication of generated terrain artifacts.
+**Completed acquisition and alignment workflows:**
+- Historical facility-location-based DEM acquisition, GeoTIFF processing, and S3 publication.
+- A unified USGS–NAIP alignment v2 pipeline covering 180 facilities with available NAIP imagery and reconstructed footprint metadata.
+- Standardized single-band, float32 DEMs in EPSG:4326 at 1/3 arc-second resolution (1/10800 degree), using a globally anchored target grid.
+- Facility-level provenance JSON files recording source selection, USGS source URLs, processing configuration, raster geometry, and NAIP metadata references.
+- Completed local validation of 180 DEMs and 180 provenance files, including raster-grid consistency, source lineage, and facility identifier checks.
+- S3 publication and remote verification of all 360 DEM/provenance objects and the associated manifest.
 
-USGS terrain data is intended for later integration into the multimodal model.
+**Final v2 S3 locations:**
+
+| Artifact | S3 prefix or key |
+|---|---|
+| Aligned DEMs (180) | `usgs/naip_aligned_v2/dem/` |
+| Provenance JSONs (180) | `usgs/naip_aligned_v2/provenance/` |
+| Alignment manifest | `usgs/processed/usgs_naip_alignment_manifest_v2.parquet` |
+
+All paths above are relative to `s3://atlas-acm-research-f26/`.
+
+**Reproducible notebook:** `environmental-features/usgs/usgs_naip_alignment.ipynb`
+
+The superseded v1 aligned S3 collection was backed up locally and removed from S3. The historical `usgs/raw/` collection and its provenance remain preserved.
+
+**Geospatial limitation:** The NAIP footprints used for alignment were reconstructed from available metadata rather than independently verified against the original historical Google Earth Engine exports. The v2 DEMs follow a consistent geographic grid, but pixel-perfect alignment with the original NAIP PNGs is not established. Historical footprint verification and image-to-DEM registration remain outstanding.
+
+The aligned terrain dataset is ready for downstream preprocessing and multimodal experimentation; integration into a trained multimodal model is not yet complete.
 
 ### Epoch AI
 
@@ -132,6 +150,61 @@ Published artifacts:
 
 The S3 publication contains 13 artifacts covering the selected model, held-out evaluation, spatial split protocol, cross-validation, SHAP analysis, and WRI ablation.
 
+## USGS Terrain Classification Baselines — Spatial Evaluation
+
+Three terrain-related experiments were completed using the 180-facility USGS–NAIP aligned v2 cohort:
+
+- **Terrain CNN:** A compact, single-channel CNN using standardized USGS 3DEP elevation rasters, with a reusable 64-dimensional terrain embedding.
+- **Handcrafted terrain baseline:** Ten interpretable terrain features evaluated using Logistic Regression and Random Forest.
+- **Geographic shortcut control:** Latitude/longitude-only Logistic Regression and Random Forest models to assess the predictive contribution of geographic location.
+
+All experiments used the same five geographic-block-disjoint outer folds, based on 2-degree latitude/longitude groups, with out-of-fold predictions for all 180 facilities.
+
+The target was footprint-derived facility size: Small (under 20,000 sqft), Medium (20,000–99,999 sqft), and Large (at least 100,000 sqft). The cohort contained 7 Small, 50 Medium, and 123 Large facilities.
+
+### Pooled out-of-fold results
+
+| Model | Accuracy | Balanced accuracy | Macro-F1 |
+|---|---:|---:|---:|
+| Handcrafted Random Forest | 0.4000 | 0.3522 | **0.3060** |
+| Geographic Logistic Regression | 0.3722 | 0.2765 | 0.2960 |
+| USGS Terrain CNN | 0.6333 | 0.3208 | 0.2881 |
+| Majority-class baseline | 0.6833 | 0.3333 | 0.2706 |
+| Geographic Random Forest | 0.3444 | 0.2590 | 0.2674 |
+| Handcrafted Logistic Regression | 0.3222 | 0.3222 | 0.2646 |
+
+The handcrafted Random Forest achieved the highest macro-F1 and balanced accuracy, although absolute performance remained limited. The terrain CNN predicted the majority Large class frequently and did not correctly identify any Small facilities.
+
+The geographic controls indicate that location alone contains some predictive signal, but these experiments do not establish that the terrain CNN learned geographic shortcuts.
+
+### Limitations and interpretation
+
+- The evaluation cohort is small and imbalanced, with only seven Small facilities.
+- Results are pooled out-of-fold estimates from five spatial folds, not performance on an independent untouched test cohort.
+- The 2-degree geographic blocks prevent groups from crossing folds but do not enforce a geographic separation buffer.
+- NAIP footprint reconstruction and exact image-to-DEM registration remain unverified.
+- Terrain-only size classification is not equivalent to detecting previously unknown data centers.
+
+These results do not establish a strong standalone terrain classifier. The CNN's 64-dimensional embedding remains available for testing whether terrain adds incremental predictive value in multimodal fusion.
+
+### Reproducibility and publication
+
+Experiment notebooks:
+
+- `models/USGS_CNN_complete.ipynb`
+- `models/USGS_Terrain_Baseline.ipynb`
+- `models/USGS_Geographic_Control.ipynb`
+
+All 18 experiment artifacts, including five CNN checkpoints, predictions, evaluation metrics, metadata, and handcrafted features, were published to:
+
+`s3://atlas-acm-research-f26/artifacts/usgs_terrain_baselines/v1/`
+
+A separate publication manifest records artifact sizes and SHA-256 checksums. All 18 uploaded artifacts and the manifest were verified by downloading and hashing their S3 contents.
+
+The completed CNN experiment used a maximum of 30 epochs with early stopping. Its published `cnn/experiment_config.json` records the completed experiment configuration.
+
+The geographic-fold manifest must also be available to reproduce the exact evaluation partitions; its separate publication remains outstanding.
+
 ## 4. Multimodal Integration — Planned Work
 
 The intended multimodal architecture will combine visual and tabular information.
@@ -152,13 +225,14 @@ These approaches are still under development and are not part of the completed v
 |---|---|
 | WRI facility-level feature extraction and validation | Complete |
 | WRI integration and publication workflows | Implemented; verify final downstream dataset version |
-| USGS 3DEP acquisition and S3 publication | Complete |
 | Original IM3/EIA tabular baseline | Complete |
 | Leakage-aware ATLAS/WRI v3 baseline | Complete |
 | SHAP analysis and WRI ablation | Complete |
+| USGS 3DEP acquisition and historical S3 publication | Complete |
+| USGS terrain-only model input preparation | Complete for 180 aligned DEMs; NAIP image-to-DEM registration remains unverified || USGS terrain CNN, handcrafted baseline, and geographic controls | Complete; five-fold spatial evaluation and S3 publication verified |
+| Historical NAIP export footprint verification | Outstanding; reconstructed metadata used |
+| USGS/NAIP model input preparation and registration | Outstanding |
 | Final v3 artifact publication to S3 | Complete |
-| NAIP imagery metadata and geospatial alignment validation | Outstanding |
-| USGS/NAIP multimodal input preparation | Outstanding |
 | Preliminary CNN/image encoder experiments | Completed; further validation needed |
 | Multimodal training entrypoint and fusion experiments | Outstanding |
 | Edge/Colocation/Hyperscale label development | Outstanding |
@@ -180,11 +254,11 @@ The following issues remain important as the project progresses:
 
 ## 7. Next Steps
 
-1. Validate the final facility-aligned multimodal dataset and NAIP metadata.
-2. Complete image and terrain preprocessing for model inputs.
-3. Implement and test the multimodal training pipeline.
-4. Compare imagery-only, tabular-only, and fused models using leakage-aware evaluation.
-5. Investigate operational data center classification labels beyond footprint-derived size classes.
+1. Verify historical NAIP export footprints where possible and validate image-to-DEM registration.
+2. Prepare aligned NAIP imagery and USGS terrain tensors for CNN training, including consistent facility IDs and spatial coverage.
+3. Implement and test the multimodal training pipeline using imagery, terrain, and EIA/WRI tabular features.
+4. Compare imagery-only, terrain-only, tabular-only, and fused models using spatially separated evaluation and feature-family ablation.
+5. Investigate operational data center classification labels (Edge, Colocation, Hyperscale) beyond footprint-derived size classes.
 
 ---
 
