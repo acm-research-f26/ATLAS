@@ -45,3 +45,9 @@ logs/
 /src/
 s3_test.txt
 AWSCLIV2.pkg
+
+# Local exploratory USGS notebook
+/models/USGS_CNN.ipynb
+
+# Generated experiment outputs (published separately to S3)
+/outputs/
