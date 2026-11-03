@@ -219,6 +219,9 @@ The 5 km/10 km deduplication configurations are distinct from the 250-meter spat
 
 ### EIA feature pipeline
 
+<<<<<<< HEAD
+-Test run folder ending in 949124 has grad-cam classifications of small, medium, and large when correct and incorrect
+=======
 The team's EIA integration notebook is located at `environmental-features/eia_feature_pipeline.ipynb`.
 
 Requirements:
@@ -254,3 +257,4 @@ Relevant files include:
 - `satellite-imagery/image_to_tensor.ipynb`
 
 Preliminary vision training and Grad-CAM implementation have begun. The integrated multimodal model and its leakage-aware evaluation remain outstanding.
+>>>>>>> a07cab3ab0ee79bebcaf43782a6ceddaea3fd051
