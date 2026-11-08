@@ -1,85 +1,67 @@
-### ATLAS Training 
+# ATLAS Training
 
-<ins>Baseline</ins>
+These multimodal experiments classify facilities as **Medium** or **Large**. The tables report held-out results across five geographic folds.
 
--The multimodal model baseline is the folder ending in 225909 with the hyperparameters of 
-```
-Tabular encoder - one hidder layer with 128 units, dropout = 0.1, 64-feature output
+## Baseline — 128 tabular hidden units
 
-Fusion classifer - one linear layer, 640 inputs, 2 logits
+**Run** · `linear-weighted-20261105-060320-225909`
 
-Image and DEM encoder - frozen resnet18 and ImageNet weights and frozen pretrained DEM CNNs
+| Setting | Value |
+| --- | --- |
+| Tabular encoder | One hidden layer with 128 units, dropout 0.1, and 64 output features |
+| Image and DEM encoders | Frozen ImageNet ResNet-18 and frozen pretrained DEM CNNs |
+| Fusion classifier | One linear layer with 640 inputs and two output logits |
+| Loss | Class-weighted cross-entropy with weights calculated from each fold's training labels |
+| Class weights | Medium 1.72–1.75 and Large 0.70–0.71, depending on the fold |
+| Optimizer | Adam with learning rate `1e-3` and weight decay 0 |
+| Batch size | 16 |
+| Learning rate scheduler | `ReduceLROnPlateau` on validation loss with patience 2 and factor 0.5 |
+| Epoch limit and early stopping | Up to 100 epochs. Stop after 7 epochs without lower validation loss and restore the best checkpoint. |
+| Evaluation and seeds | Five geographic folds, base seed 42, and training seeds 43–47 |
 
-Loss - class-weighted cross-entropy, with weights calculated from each folds training labels
+### Held-out results
 
-Class weights = medium: 1.72-1.75, large: 0.70-0.71 dependent on fold
+| Modality | Accuracy | Macro-F1 | Balanced accuracy |
+| --- | ---: | ---: | ---: |
+| Image only | 71.7% | 0.684 | 70.6% |
+| Image + tabular | 65.3% | 0.608 | 62.0% |
+| Image + DEM | 72.3% | 0.686 | 70.4% |
+| **All three** | 62.4% | 0.577 | 58.7% |
 
-Optimizer - Adam, learning rate of 0.001 and weight decay of 0
+## Experiment 1 — 32 tabular hidden units
 
-Batch size - 16
+**Run** · `linear-weighted-20261108-184912-657505`
 
-Learning-rate scheduler - ReduceLROnPlateau on validation loss, patience 2, factor 0.5
+Reduced the tabular hidden width from 128 to 32 and used class-weighted cross-entropy.
 
-Epoch and early stopping - up to 100 epochs, stops after 7 epochs without lower validation loss and restore best checkpoint
+### Held-out results
 
-Evaluation and seeds - 5 geographic folds, base seed 42, training seed 43-47
+| Modality | Accuracy | Macro-F1 | Balanced accuracy |
+| --- | ---: | ---: | ---: |
+| Image only | 72.8% | 0.694 | 71.4% |
+| Image + tabular | 71.1% | 0.663 | 67.2% |
+| Image + DEM | 71.7% | 0.686 | 71.2% |
+| **All three** | 64.2% | 0.587 | 59.4% |
 
-```
+Image + tabular saw the largest improvement over the baseline. Accuracy rose from 65.3% to 71.1% and macro-F1 rose from 0.608 to 0.663. With all three modalities, accuracy rose from 62.4% to 64.2% and macro-F1 rose from 0.577 to 0.587.
 
-## Results
+## Experiment 2 — Unweighted cross-entropy
 
-"accuracy": 0.6242774566473989,
-"macro_f1": 0.5766986636551854,
-"balanced_accuracy": 0.5873983739837398
+**Run** · `linear-weighted-20261108-200357-906451`
 
-# Modality comparison
-variant,accuracy,macro_f1,balanced_accuracy
-image_only | 0.7167630057803468 |0.6836113910349718 | 0.7058536585365853
-image_tabular | 0.653179190751445 | 0.6075317604355717 | 0.6195934959349594
-image_dem | 0.7225433526011561 | 0.6860254083484574 | 0.7039837398373984
-all | 0.6242774566473989 | 0.5766986636551854 | 0.5873983739837398
+Used unweighted cross-entropy with the 32-unit tabular encoder.
 
+### Held-out results
 
-<ins>Test 1</ins>
+| Modality | Accuracy | Macro-F1 | Balanced accuracy |
+| --- | ---: | ---: | ---: |
+| Image only | 74.6% | 0.660 | 64.9% |
+| Image + tabular | 70.5% | 0.589 | 58.5% |
+| Image + DEM | 71.7% | 0.612 | 60.5% |
+| **All three** | 71.7% | 0.583 | 58.1% |
 
--The test ending in 657505 runs on 32 hidden layers instead of 128 on the tabular encoder 
+With all three modalities, unweighted loss increased accuracy from 64.2% to 71.7%, while macro-F1 fell from 0.587 to 0.583 and balanced accuracy fell from 59.4% to 58.1%. The model made fewer false Medium predictions and missed more Medium facilities. The weighted run gave a better balance between the two classes.
 
-## Results
+## Other experiments
 
-"accuracy": 0.6416184971098265,
-"macro_f1": 0.5868258859784283,
-"balanced_accuracy": 0.5936585365853658
-
-# Modality comparison
-variant,accuracy,macro_f1,balanced_accuracy
-image_only | 0.7283236994219653 | 0.6939205721814418 | 0.7139837398373984
-image_tabular | 0.7109826589595376 | 0.6634765017117958 | 0.6721138211382114
-image_dem | 0.7167630057803468 | 0.6861881316403213 | 0.7117886178861789
-all | 0.6416184971098265 | 0.5868258859784283 | 0.5936585365853658
-
-
-The biggest improvement was 
-Model | Accuracy | Macro-F1 | 
-Image + tabular	| 65.3% → 71.1%  |0.608 → 0.663 |
-All three |62.4% → 64.2%| 0.577 → 0.587| 
-
-<ins>Test 2</ins>
-
--The test ending in 906451 uses unweighted cross-entropy loss with 32 hidden layers 
-
-## Results
-
-"accuracy": 0.7167630057803468,
-"macro_f1": 0.5829274292742928,
-"balanced_accuracy": 0.581219512195122,
-
-# Modality Comparison
-variant,accuracy,macro_f1,balanced_accuracy
-image_only | 0.7456647398843931 | 0.6595706618962434 | 0.6490243902439025
-image_tabular | 0.7052023121387283 | 0.5889587700908456 | 0.5849593495934959
-image_dem | 0.7167630057803468 | 0.611663383572312 | 0.604959349593496
-all | 0.7167630057803468 | 0.5829274292742928 | 0.581219512195122
-
-The weighted loss is the better choice between unweighted if we want the model to recognize both classes reliably, because it swung too far toward large even though it reduced false Medium predictions.
-
-I've also tried prediction-level late fusion, removing columns lie "type" and "ba_code", changed the tabular dropout to 0.25 to 0.1, and changed the learning rate from 1e-3 to 3e-4, and it performed worse with those implementations so I didn't even send them to s3.
+Additional experiments included prediction-level late fusion, removing `type` and `ba_code`, increasing tabular dropout from 0.10 to 0.25, and lowering the learning rate from `1e-3` to `3e-4` but didn't push them to s3 because they either performed significantly worse or no improvements at all.
