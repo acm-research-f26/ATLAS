@@ -62,6 +62,23 @@ Used unweighted cross-entropy with the 32-unit tabular encoder.
 
 With all three modalities, unweighted loss increased accuracy from 64.2% to 71.7%, while macro-F1 fell from 0.587 to 0.583 and balanced accuracy fell from 59.4% to 58.1%. The model made fewer false Medium predictions and missed more Medium facilities. The weighted run gave a better balance between the two classes.
 
+## Experiment 3 — Equal-width modality projections
+
+**Run** · `linear-weighted-20261109-192120-225919`
+
+Added a trainable linear projection and LayerNorm to each modality before concatenation. Each branch contributes 64 features, so the full classifier takes 192 inputs. The run used 32 tabular hidden units, dropout 0.1, class-weighted cross-entropy, and learning rate `1e-3`.
+
+### Held-out results
+
+| Modality | Accuracy | Macro-F1 | Balanced accuracy |
+| --- | ---: | ---: | ---: |
+| Image only | 72.3% | 0.694 | 72.2% |
+| Image + tabular | 71.1% | 0.688 | 72.6% |
+| Image + DEM | 69.4% | 0.648 | 66.0% |
+| **All three** | 62.4% | 0.596 | 62.3% |
+
+Compared with Experiment 1, image + tabular macro-F1 rose from 0.663 to 0.688 and balanced accuracy rose from 67.2% to 72.6%, with accuracy at 71.1% in both runs. The full model's macro-F1 rose from 0.587 to 0.596, while accuracy fell from 64.2% to 62.4%. Within the projected run, image-only had the highest accuracy and macro-F1, and image + tabular had the highest balanced accuracy.
+
 ## Other experiments
 
 Additional experiments included prediction-level late fusion, removing `type` and `ba_code`, increasing tabular dropout from 0.10 to 0.25, and lowering the learning rate from `1e-3` to `3e-4` but didn't push them to s3 because they either performed significantly worse or no improvements at all.
