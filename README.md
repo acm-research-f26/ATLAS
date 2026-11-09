@@ -79,6 +79,23 @@ Added a trainable linear projection and LayerNorm to each modality before concat
 
 Compared with Experiment 1, image + tabular macro-F1 rose from 0.663 to 0.688 and balanced accuracy rose from 67.2% to 72.6%, with accuracy at 71.1% in both runs. The full model's macro-F1 rose from 0.587 to 0.596, while accuracy fell from 64.2% to 62.4%. Within the projected run, image-only had the highest accuracy and macro-F1, and image + tabular had the highest balanced accuracy.
 
+## Experiment 4 — AdamW and longer early-stopping patience
+
+**Run** · `linear-weighted-20261109-202956-494710`
+
+Used the 64-feature modality projections and class-weighted cross-entropy from Experiment 3. Switched to AdamW with weight decay `1e-4`. The epoch cap was 50, early-stopping patience was 15, and the validation-loss scheduler used patience 5 and factor 0.5.
+
+### Held-out results
+
+| Modality | Accuracy | Macro-F1 | Balanced accuracy |
+| --- | ---: | ---: | ---: |
+| Image only | 72.8% | 0.704 | 73.8% |
+| Image + tabular | 71.1% | 0.688 | 72.6% |
+| Image + DEM | 69.4% | 0.648 | 66.0% |
+| **All three** | 62.4% | 0.596 | 62.3% |
+
+Compared with Experiment 3, image-only macro-F1 rose from 0.694 to 0.704. The other three variants recorded the same held-out scores. The full model's five folds stopped at epochs 17–21 and restored checkpoints from epochs 2–6, the same best epochs selected in Experiment 3.
+
 ## Other experiments
 
 Additional experiments included prediction-level late fusion, removing `type` and `ba_code`, increasing tabular dropout from 0.10 to 0.25, and lowering the learning rate from `1e-3` to `3e-4` but didn't push them to s3 because they either performed significantly worse or no improvements at all.
