@@ -1,101 +1,68 @@
-# ATLAS Training
+![ACM Research Banner Light](https://github.com/ACM-Research/paperImplementations/assets/108421238/467a89e3-72db-41d7-9a25-51d2c589bfd9)
 
-These multimodal experiments classify facilities as **Medium** or **Large**. The tables report held-out results across five geographic folds.
+---
+# ATLAS - Characterizing Data Center Development using Multimodal Data Fusion
 
-## Baseline — 128 tabular hidden units
+## 📌 Project Summary
+ATLAS investigates whether publicly available satellite imagery, terrain elevation, regional environmental and infrastructure indicators can jointly characterize the scale of U.S. data centers. We developed and evaluated a multimodal classification framework that combines National Agriculture Imagery Program (NAIP) imagery, USGS 3D Elevation Program (3DEP) terrain data, tabular features derived from IM3, the U.S. Energy Information Administration (EIA), and WRI Aqueduct. The final experiment classifies facilities as **Medium** or **Large**, based on footprint-derived size labels, using **173 facilities** evaluated across five geographic folds.
 
-**Run** · `linear-weighted-20261105-060320-225909`
+## 🎯 Motivation
+Growing demand for AI training and inference has accelerated data center development, while public facility-level operational data remains limited. Understanding where facilities are built and how their scale relates to surrounding infrastructure and environmental conditions is important for future research on energy and water demand. ATLAS explores whether widely available geospatial and contextual data can provide a scalable starting point for facility profiling without requiring manual inspection of every site.
 
-| Setting | Value |
-| --- | --- |
-| Tabular encoder | One hidden layer with 128 units, dropout 0.1, and 64 output features |
-| Image and DEM encoders | Frozen ImageNet ResNet-18 and frozen pretrained DEM CNNs |
-| Fusion classifier | One linear layer with 640 inputs and two output logits |
-| Loss | Class-weighted cross-entropy with weights calculated from each fold's training labels |
-| Class weights | Medium 1.72–1.75 and Large 0.70–0.71, depending on the fold |
-| Optimizer | Adam with learning rate `1e-3` and weight decay 0 |
-| Batch size | 16 |
-| Learning rate scheduler | `ReduceLROnPlateau` on validation loss with patience 2 and factor 0.5 |
-| Epoch limit and early stopping | Up to 100 epochs. Stop after 7 epochs without lower validation loss and restore the best checkpoint. |
-| Evaluation and seeds | Five geographic folds, base seed 42, and training seeds 43–47 |
+## 🧩 Novelty
+- **Multimodal Data Integration:** Combines high-resolution NAIP satellite imagery, USGS 3DEP terrain data, and EIA/WRI infrastructure and environmental indicators to characterize data center facilities using complementary visual and non-visual information.
+- **Modality-Specific Feature Extraction:** Employs separate neural network encoders for satellite imagery (ResNet-18), terrain (SmallCNN), and tabular features (MLP), integrating their learned representations through feature-level fusion.
+- **Modality ablation:** Evaluates image-only, image-plus-tabular, image-plus-terrain, and three-modality configurations to measure whether added information improves prediction.
+- **Geographically separated evaluation:** Uses five geographic folds to assess performance on held-out facilities rather than relying solely on random splits.
+- **Explainable predictions:** Uses Grad-CAM to visualize influential satellite image regions and Integrated Gradients for tabular and terrain attribution, helping identify potential reliance on surrounding scene context and regional indicators.
 
-### Held-out results
+## 🧠 Methodology
+1. **Dataset:** The 2025 IM3 Atlas dataset supplied the facility registry, geographic coordinates, and footprint information for **1,147 U.S. data centers** in the initial cohort. Records were spatially deduplicated to **317** facilities. The USGS–NAIP alignment workflow produced **180** paired terrain records; after filtering and exclusion of the Small class, **173 Medium and Large facilities** were used in the final multimodal evaluation. Data modalities included:
+   - **NAIP:** Satellite imagery capturing building footprints and surrounding land cover.
+   - **USGS 3DEP:** Elevation rasters providing local terrain context.
+   - **IM3/EIA/WRI:** Facility, regional energy/infrastructure, and Aqueduct water-risk information. WRI indicators describe regional water risk, not measured facility water consumption.
 
-| Modality | Accuracy | Macro-F1 | Balanced accuracy |
-| --- | ---: | ---: | ---: |
-| Image only | 71.7% | 0.684 | 70.6% |
-| Image + tabular | 65.3% | 0.608 | 62.0% |
-| Image + DEM | 72.3% | 0.686 | 70.4% |
-| **All three** | 62.4% | 0.577 | 58.7% |
+2. **Architecture:** Three modality-specific encoders produce **64-dimensional representations**:
+   - **NAIP imagery:** Pretrained ResNet-18.
+   - **USGS terrain:** SmallCNN.
+   - **Tabular features:** Multilayer perceptron (MLP).
+   - **Fusion:** Trainable modality projections and normalization yield three 64-dimensional embeddings, concatenated into a **192-dimensional vector** and passed to a linear classifier with two output logits (Medium and Large). The pretrained image and terrain backbones remain frozen during the final training configuration.
 
-## Experiment 1 — 32 tabular hidden units
+3. **Evaluation:** Models were trained using class-weighted cross-entropy, AdamW with weight decay, training-only image augmentation, learning-rate scheduling, and early stopping. The best checkpoint within each fold was selected by validation loss. Five geographic folds yielded one held-out prediction per facility (**n = 173**). The final comparison tests four modality combinations under this evaluation protocol.
 
-**Run** · `linear-weighted-20261108-184912-657505`
+4. **Metrics:** Macro-F1 averages the two classes' F1 scores, balanced accuracy averages class recall, and accuracy measures the proportion of correct predictions.
 
-Reduced the tabular hidden width from 128 to 32 and used class-weighted cross-entropy.
+   | Model | Macro-F1 ↑ | Balanced Accuracy ↑ | Accuracy ↑ |
+   |---|---:|---:|---:|
+   | **Image Only (Baseline)** | **0.704** | **0.738** | **0.728** |
+   | Image + Tabular | 0.688 | 0.726 | 0.711 |
+   | Image + Terrain | 0.648 | 0.660 | 0.694 |
+   | Image + Tabular + Terrain | 0.596 | 0.623 | 0.624 |
 
-### Held-out results
+#### Additional Methodology:
+- **Interpretability:** Grad-CAM and Integrated Gradients were examined on model predictions. In an illustrated incorrect prediction, image attention included vegetation, access roads, and nearby development, while strong tabular attributions involved regional balancing-authority indicators; terrain attributions were comparatively diffuse.
+- **Earlier baselines:** Separate three-class tabular and terrain experiments informed the research pipeline, but their datasets, labels, and evaluation protocols differ from the final two-class multimodal study. Their scores should not be compared directly with the table above.
 
-| Modality | Accuracy | Macro-F1 | Balanced accuracy |
-| --- | ---: | ---: | ---: |
-| Image only | 72.8% | 0.694 | 71.4% |
-| Image + tabular | 71.1% | 0.663 | 67.2% |
-| Image + DEM | 71.7% | 0.686 | 71.2% |
-| **All three** | 64.2% | 0.587 | 59.4% |
+## 🌍 Impact
+The final ablation found that **NAIP imagery alone performed best on Macro-F1 and accuracy** for the evaluated Medium/Large classification task. Adding tabular and terrain features did not improve these scores, and the full three-modality model performed worse. These findings suggest that coarse regional indicators and terrain information can dilute useful local visual signal under the tested fusion design. They also demonstrate the value of evaluating added modalities rather than assuming that more data always improves a model.
 
-Image + tabular saw the largest improvement over the baseline. Accuracy rose from 65.3% to 71.1% and macro-F1 rose from 0.608 to 0.663. With all three modalities, accuracy rose from 62.4% to 64.2% and macro-F1 rose from 0.577 to 0.587.
+ATLAS is an early investigation of **footprint-derived facility scale**, not a validated method for estimating actual energy or water use, identifying previously unknown facilities, or distinguishing operational categories such as Edge, Colocation, and Hyperscale. The small evaluation cohort, class imbalance, geographic transferability, and remaining image-to-terrain registration uncertainty limit generalization.
 
-## Experiment 2 — Unweighted cross-entropy
 
-**Run** · `linear-weighted-20261108-200357-906451`
+#### Future Work
 
-Used unweighted cross-entropy with the 32-unit tabular encoder.
+- Expand and diversify the facility dataset, including more geographic regions and underrepresented size classes.
+- Verify historical NAIP footprints and improve pixel-level image-to-DEM registration.
+- Investigate fine-tuning visual encoders and adaptive fusion approaches, such as cross-attention, to better combine local and regional information.
+- Evaluate against external geographic holdouts and develop independently validated operational facility labels.
 
-### Held-out results
 
-| Modality | Accuracy | Macro-F1 | Balanced accuracy |
-| --- | ---: | ---: | ---: |
-| Image only | 74.6% | 0.660 | 64.9% |
-| Image + tabular | 70.5% | 0.589 | 58.5% |
-| Image + DEM | 71.7% | 0.612 | 60.5% |
-| **All three** | 71.7% | 0.583 | 58.1% |
+**Additional Sources:**
 
-With all three modalities, unweighted loss increased accuracy from 64.2% to 71.7%, while macro-F1 fell from 0.587 to 0.583 and balanced accuracy fell from 59.4% to 58.1%. The model made fewer false Medium predictions and missed more Medium facilities. The weighted run gave a better balance between the two classes.
-
-## Experiment 3 — Equal-width modality projections
-
-**Run** · `linear-weighted-20261109-192120-225919`
-
-Added a trainable linear projection and LayerNorm to each modality before concatenation. Each branch contributes 64 features, so the full classifier takes 192 inputs. The run used 32 tabular hidden units, dropout 0.1, class-weighted cross-entropy, and learning rate `1e-3`.
-
-### Held-out results
-
-| Modality | Accuracy | Macro-F1 | Balanced accuracy |
-| --- | ---: | ---: | ---: |
-| Image only | 72.3% | 0.694 | 72.2% |
-| Image + tabular | 71.1% | 0.688 | 72.6% |
-| Image + DEM | 69.4% | 0.648 | 66.0% |
-| **All three** | 62.4% | 0.596 | 62.3% |
-
-Compared with Experiment 1, image + tabular macro-F1 rose from 0.663 to 0.688 and balanced accuracy rose from 67.2% to 72.6%, with accuracy at 71.1% in both runs. The full model's macro-F1 rose from 0.587 to 0.596, while accuracy fell from 64.2% to 62.4%. Within the projected run, image-only had the highest accuracy and macro-F1, and image + tabular had the highest balanced accuracy.
-
-## Experiment 4 — AdamW and longer early-stopping patience
-
-**Run** · `linear-weighted-20261109-202956-494710`
-
-Used the 64-feature modality projections and class-weighted cross-entropy from Experiment 3. Switched to AdamW with weight decay `1e-4`. The epoch cap was 50, early-stopping patience was 15, and the validation-loss scheduler used patience 5 and factor 0.5.
-
-### Held-out results
-
-| Modality | Accuracy | Macro-F1 | Balanced accuracy |
-| --- | ---: | ---: | ---: |
-| Image only | 72.8% | 0.704 | 73.8% |
-| Image + tabular | 71.1% | 0.688 | 72.6% |
-| Image + DEM | 69.4% | 0.648 | 66.0% |
-| **All three** | 62.4% | 0.596 | 62.3% |
-
-Compared with Experiment 3, image-only macro-F1 rose from 0.694 to 0.704. The other three variants recorded the same held-out scores. The full model's five folds stopped at epochs 17–21 and restored checkpoints from epochs 2–6, the same best epochs selected in Experiment 3.
-
-## Other experiments
-
-Additional experiments included prediction-level late fusion, removing `type` and `ba_code`, increasing tabular dropout from 0.10 to 0.25, and lowering the learning rate from `1e-3` to `3e-4` but didn't push them to s3 because they either performed significantly worse or no improvements at all.
+- IM3 Open Source Data Center Atlas (2025), Pacific Northwest National Laboratory.
+- USDA National Agriculture Imagery Program (NAIP).
+- USGS 3D Elevation Program (3DEP).
+- U.S. Energy Information Administration (EIA).
+- World Resources Institute (WRI), Aqueduct 4.0.
+- Zhou, Y., Tan, Y., Wen, Q., Wang, W., Li, L., & Li, Z. (2023). *Deep Multimodal Fusion Model for Building Structural Type Recognition Using Multisource Remote Sensing Images and Building-Related Knowledge*. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 16, 9646–9660. https://doi.org/10.1109/JSTARS.2023.3323484
+- Suel, E., Bhatt, S., Brauer, M., Flaxman, S., & Ezzati, M. (2021). *Multimodal deep learning from satellite and street-level imagery for measuring income, overcrowding, and environmental deprivation in urban areas*. Remote Sensing of Environment, 257, 112339. https://doi.org/10.1016/j.rse.2021.112339
